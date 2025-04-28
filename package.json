@@ -1,0 +1,39 @@
+{
+    "name": "baileys-api",
+    "description": "Simple RESTful WhatsApp API",
+    "private": true,
+    "main": "app.js",
+    "type": "module",
+    "scripts": {
+        "start": "node ."
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ookamiiixd/baileys-api.git"
+    },
+    "author": "ookamiiixd <ookamiiixd@gmail.com>",
+    "bugs": {
+        "url": "https://github.com/ookamiiixd/baileys-api/issues"
+    },
+    "homepage": "https://github.com/ookamiiixd/baileys-api#readme",
+    "engines": {
+        "node": ">=18.16.0"
+    },
+    "dependencies": {
+        "@whiskeysockets/baileys": "^6.7.12",
+        "axios": "^1.7.9",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "express-validator": "^7.2.1",
+        "node-cache": "^5.1.2",
+        "node-cleanup": "^2.1.2",
+        "pino": "^9.6.0",
+        "qrcode": "^1.5.4"
+    },
+    "devDependencies": {
+        "eslint": "^8.0.0",
+        "eslint-plugin-prettier": "^5.2.3",
+        "prettier": "^3.4.2"
+    }
+}

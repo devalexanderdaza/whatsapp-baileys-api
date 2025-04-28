@@ -1,0 +1,6 @@
+<component name="CopyrightManager">
+  <copyright>
+    <option name="notice" value="set( &amp;#36;owner = &quot;Alexander Daza (dev.alexander.daza@gmail.com)&quot; )&#10;Copyright (c) &amp;#36;originalComment.match(&quot;Copyright \(c\) (\d+)&quot;, 1, &quot;-&quot;, &quot;&amp;#36;today.year&quot;)&amp;#36;{velocityHashtag}if(&amp;#36;originalComment.isEmpty())&amp;#36;today.year. &amp;#36;owner. All rights reserved.&#10;&#10;This software is provided &quot;as is,&quot; without warranty of any kind, express or&#10;implied, including but not limited to the warranties of merchantability,&#10;fitness for a particular purpose and noninfringement. In no event shall the&#10;authors or copyright holders be liable for any claim, damages or other&#10;liability, whether in an action of contract, tort or otherwise, arising from,&#10;out of or in connection with the software or the use or other dealings in the&#10;software." />
+    <option name="myName" value="Devalexanderdaza" />
+  </copyright>
+</component>
