@@ -1,13 +1,13 @@
 import {
-    getSession,
-    getChatList,
-    isExists,
-    sendMessage,
-    formatPhone,
     formatGroup,
-    readMessage,
+    formatPhone,
+    getChatList,
     getMessageMedia,
+    getSession,
     getStoreMessage,
+    isExists,
+    readMessage,
+    sendMessage,
 } from './../whatsapp.js'
 import response from './../response.js'
 import { compareAndFilter, fileExists, isUrlValid } from './../utils/functions.js'
@@ -57,8 +57,18 @@ const send = async (req, res) => {
 const sendBulk = async (req, res) => {
     const session = getSession(res.locals.sessionId)
     const errors = []
+    
+    let messagess = [];
+    
+    if (typeof req.body === 'object') {
+        messagess.push(req.body);
+    } else{
+        messagess = req.body;
+    }
+    
+    console.log(messagess);
 
-    for (const [key, data] of req.body.entries()) {
+    for (const [key, data] of Object.entries(messagess)) {
         let { receiver, message, delay } = data
 
         if (!receiver || !message) {
