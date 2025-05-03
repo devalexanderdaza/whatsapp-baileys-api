@@ -1,25 +1,67 @@
-/*
- * set( $owner = "Alexander Daza (dev.alexander.daza@gmail.com)" )
- * Copyright (c) ${velocityHashtag}if($originalComment.isEmpty())2025. $owner. All rights reserved.
- *
- * This software is provided "as is," without warranty of any kind, express or
- * implied, including but not limited to the warranties of merchantability,
- * fitness for a particular purpose and noninfringement. In no event shall the
- * authors or copyright holders be liable for any claim, damages or other
- * liability, whether in an action of contract, tort or otherwise, arising from,
- * out of or in connection with the software or the use or other dealings in the
- * software.
- */
+import os from 'os'
 import fs from 'fs'
 import path from 'path'
+import __dirname from '../dirname.js'
 
+/** Directorio para almacenamiento de archivos */
 const getOutputDir = () => {
-    // Directorio donde se almacenarán las imágenes
-    const OUTPUT_DIR = path.join(process.cwd(), 'public')
-    if (!fs.existsSync(OUTPUT_DIR)) {
-        fs.mkdirSync(OUTPUT_DIR)
-    }
-    return OUTPUT_DIR
+    const dir = path.join(__dirname, 'public')
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+    return dir
 }
 
-export { getOutputDir }
+/** Construye la URL completa desde un request */
+const getFullUrl = (req) => `${req.protocol}://${req.get('host')}${req.baseUrl || ''}`
+
+/** Construye la base URL desde un request */
+const getBaseUrl = (req) => `${req.protocol}://${req.get('host')}`
+
+/** IP real del cliente, soporta proxies */
+const getClientIp = (req) => req.headers['x-forwarded-for'] || req.connection?.remoteAddress || ''
+
+/** Info del sistema operativo */
+const getOsInfo = () => ({
+    type: os.type(),
+    platform: os.platform(),
+    release: os.release(),
+    arch: os.arch(),
+    hostname: os.hostname(),
+    uptime: os.uptime(),
+    loadavg: os.loadavg(),
+    totalmem: os.totalmem(),
+})
+
+/** IP pública de red local */
+const getLocalPublicIP = () => {
+    for (const iface of Object.values(os.networkInterfaces()).flat()) {
+        if (iface.family === 'IPv4' && !iface.internal) return iface.address
+    }
+    return '127.0.0.1'
+}
+
+/** Devuelve true si está en entorno de producción */
+const isProduction = () => process.env.NODE_ENV === 'production'
+
+/** Host para app.listen() según entorno */
+const getHostForListen = () => (isProduction() ? '0.0.0.0' : '127.0.0.1')
+
+/** Base URL sin request, adaptable a entorno */
+const getBaseUrlWithoutRequest = (app = null) => {
+    const protocol = (process.env.PROTOCOL || 'http').toLowerCase()
+    const host = app?.get?.('host') || process.env.HOST || getLocalPublicIP()
+    const port = parseInt(process.env.PORT || '8000', 10)
+    const defaultPort = (protocol === 'http' && port === 80) || (protocol === 'https' && port === 443)
+    return `${protocol}://${host}${defaultPort ? '' : `:${port}`}`
+}
+
+export {
+    getOutputDir,
+    getFullUrl,
+    getBaseUrl,
+    getClientIp,
+    getOsInfo,
+    getLocalPublicIP,
+    getBaseUrlWithoutRequest,
+    getHostForListen,
+    isProduction,
+}

@@ -1,19 +1,18 @@
-import { rmSync, readdir, existsSync } from 'fs'
+import { existsSync, readdir, rmSync } from 'fs'
 import { join } from 'path'
 import pino from 'pino'
-import makeWASocket, {
-    useMultiFileAuthState,
-    makeInMemoryStore,
-    makeCacheableSignalKeyStore,
-    DisconnectReason,
+import makeWASocket from '@whiskeysockets/baileys'
+import proto, {
     delay,
+    DisconnectReason,
     downloadMediaMessage,
-    getAggregateVotesInPollMessage,
     fetchLatestBaileysVersion,
+    getAggregateVotesInPollMessage,
+    makeCacheableSignalKeyStore,
+    makeInMemoryStore,
+    useMultiFileAuthState,
     WAMessageStatus,
 } from '@whiskeysockets/baileys'
-
-import proto from '@whiskeysockets/baileys'
 
 import { toDataURL } from 'qrcode'
 import __dirname from './dirname.js'
@@ -27,7 +26,9 @@ const msgRetryCounterCache = new NodeCache()
 const sessions = new Map()
 const retries = new Map()
 
-const APP_WEBHOOK_ALLOWED_EVENTS = process.env.APP_WEBHOOK_ALLOWED_EVENTS.split(',')
+const APP_WEBHOOK_ALLOWED_EVENTS = process.env.APP_WEBHOOK_ALLOWED_EVENTS
+    ? process.env.APP_WEBHOOK_ALLOWED_EVENTS.split(',')
+    : ['ALL']
 
 const sessionsDir = (sessionId = '') => {
     return join(__dirname, 'sessions', sessionId ? sessionId : '')
@@ -431,11 +432,66 @@ const isExists = async (session, jid, isGroup = false) => {
 
 /**
  * @param {import('@whiskeysockets/baileys').AnyWASocket} session
+ * @param {import('@whiskeysockets/baileys').WAPresence} presence
+ * @param {string|undefined} receiver
+ */
+const sendPresence = async (session, presence, receiver = undefined) => {
+    try {
+        if (receiver) {
+            const jid = receiver.endsWith('@g.us') ? formatGroup(receiver) : formatPhone(receiver)
+
+            return await session.sendPresenceUpdate(presence, jid)
+        }
+        return await session.sendPresenceUpdate(presence)
+    } catch {
+        return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+    }
+}
+
+/**
+ * @param {import('@whiskeysockets/baileys').AnyWASocket} session
+ * @param {string} receiver
+ * @param {import('@whiskeysockets/baileys').proto.WebMessageInfo} message
+ * @param {number} delayMs
  */
 const sendMessage = async (session, receiver, message, delayMs = 1000) => {
+    if (delayMs <= 0) {
+        delayMs = Math.floor(Math.random() * 3000 + 1000) // Random delay between 1 and 3 seconds
+    }
+    if (delayMs >= 0 && delayMs <= 1000) {
+        delayMs = Math.floor(Math.random() * 3000 + 1000) // Random delay between 1 and 3 seconds
+    }
+    if (delayMs > 1000) {
+        delayMs = Math.floor(Math.random() * delayMs + 1000) // Random delay between 1 and delayMs
+    }
+
     try {
-        await delay(parseInt(delayMs))
-        return await session.sendMessage(receiver, message)
+        // Send presence update before sending the message
+        const jid = receiver.endsWith('@g.us') ? formatGroup(receiver) : formatPhone(receiver)
+
+        // Send available presence update
+        await sendPresence(session, 'available', jid)
+
+        // Wait for the specified delay
+        await delay(Math.floor(Math.random() * 3000 + 1000)) // Random delay between 1 and 3 seconds
+
+        // Send composing presence update
+        await session.sendPresenceUpdate('composing', jid)
+
+        // Wait for the specified delay before sending the message
+        await delay(delayMs)
+
+        // Send the message
+        const msg = await session.sendMessage(jid, message)
+
+        // Wait for 1 second before sending the next presence update
+        await delay(1000)
+
+        // Send unavailable presence update
+        await sendPresence(session, 'unavailable', jid)
+
+        // Send message response
+        return msg
     } catch {
         return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
     }
@@ -624,6 +680,7 @@ export {
     getChatList,
     getGroupsWithParticipants,
     isExists,
+    sendPresence,
     sendMessage,
     updateProfileStatus,
     updateProfileName,

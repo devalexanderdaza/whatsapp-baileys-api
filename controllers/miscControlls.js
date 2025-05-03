@@ -12,7 +12,7 @@ import {
     updateProfileStatus,
 } from './../whatsapp.js'
 import response from './../response.js'
-import { getOutputDir } from '../utils/utils.js'
+import { getBaseUrlWithoutRequest, getOutputDir } from '../utils/utils.js'
 
 const setProfileStatus = async (req, res) => {
     try {
@@ -108,8 +108,9 @@ const getImageFromHTML = async (req, res) => {
         await page.screenshot({ path: filepath, type: 'jpeg', fullPage: true })
         await browser.close()
 
-        const fullBaseUrl = `${req.protocol}://${req.get('host')}`
-        const imageUrl = `${fullBaseUrl}/img/${filename}`
+        //const fullBaseUrl = `${req.protocol}://${req.get('host')}`
+        // const imageUrl = `${getBaseUrl(req)}/img/${filename}`
+        const imageUrl = `${getBaseUrlWithoutRequest()}/img/${filename}`
 
         response(res, 200, true, 'Image generated successfully', { image_url: imageUrl })
     } catch (err) {

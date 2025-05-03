@@ -56,59 +56,55 @@ const send = async (req, res) => {
 
 const sendBulk = async (req, res) => {
     const session = getSession(res.locals.sessionId)
-    const errors = []
-
     let messagesArray = []
 
-    if (typeof req.body === 'object') {
+    if (typeof req.body === 'object' && !Array.isArray(req.body)) {
         messagesArray.push(req.body)
     } else {
         messagesArray = req.body
     }
 
-    for (const [key, data] of Object.entries(messagesArray[0])) {
-        let { receiver, message, delay } = data
+    // Responder inmediatamente para no bloquear la API
+    response(res, 200, true, 'Bulk message process started.')
 
-        if (!receiver || !message) {
-            errors.push({ key, message: 'The receiver number is not exists.' })
-            continue
-        }
+    // Procesar mensajes en segundo plano
+    ;(async () => {
+        for (const [key, data] of messagesArray.entries()) {
+            let { receiver, message, delay, isGroup } = data
 
-        if (!delay || isNaN(delay)) {
-            delay = 1000
-        }
-
-        receiver = formatPhone(receiver)
-
-        try {
-            const exists = await isExists(session, receiver)
-
-            if (!exists) {
-                errors.push({ key, message: 'number not exists on whatsapp' })
+            if (!receiver || !message) {
+                console.error(`Índice ${key}: Falta receptor o mensaje.`)
                 continue
             }
 
-            sendMessage(session, receiver, message, delay).then(() => {
-                console.log(`Message sent to ${receiver}`)
-            })
-        } catch (err) {
-            errors.push({ key, message: err.message })
+            if (!delay || isNaN(delay)) {
+                delay = 1000
+            } else {
+                delay = parseInt(delay)
+            }
+
+            receiver = isGroup ? formatGroup(receiver) : formatPhone(receiver)
+
+            try {
+                const exists = await isExists(session, receiver, isGroup ?? false)
+
+                if (!exists) {
+                    console.error(`Índice ${key}: El número no existe en WhatsApp.`)
+                    continue
+                }
+
+                await sendMessage(session, receiver, message, delay)
+                console.log(`Mensaje enviado a ${receiver}`)
+            } catch (err) {
+                console.error(`Índice ${key}: ${err.message}`)
+            }
+
+            // Esperar el delay antes del siguiente envío
+            await new Promise((resolve) => setTimeout(resolve, delay))
         }
-    }
-
-    if (errors.length === 0) {
-        return response(res, 200, true, 'All messages has been successfully sent.')
-    }
-
-    const isAllFailed = errors.length === req.body.length
-
-    response(
-        res,
-        isAllFailed ? 500 : 200,
-        !isAllFailed,
-        isAllFailed ? 'Failed to send all messages.' : 'Some messages has been successfully sent.',
-        { errors },
-    )
+    })().catch((err) => {
+        console.error(`Error en el procesamiento de mensajes: ${err.message}`)
+    })
 }
 
 const deleteChat = async (req, res) => {
