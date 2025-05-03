@@ -5,7 +5,8 @@
     "main": "app.js",
     "type": "module",
     "scripts": {
-        "start": "node ."
+        "start": "node .",
+        "dev": "nodemon ."
     },
     "repository": {
         "type": "git",
@@ -22,18 +23,23 @@
     "dependencies": {
         "@whiskeysockets/baileys": "^6.7.12",
         "axios": "^1.7.9",
+        "body-parser": "^2.2.0",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
         "express-validator": "^7.2.1",
         "node-cache": "^5.1.2",
         "node-cleanup": "^2.1.2",
+        "node-cron": "^3.0.3",
         "pino": "^9.6.0",
-        "qrcode": "^1.5.4"
+        "puppeteer": "^24.8.0",
+        "qrcode": "^1.5.4",
+        "uuid": "^11.1.0"
     },
     "devDependencies": {
         "eslint": "^8.0.0",
         "eslint-plugin-prettier": "^5.2.3",
+        "nodemon": "^3.1.10",
         "prettier": "^3.4.2"
     }
 }

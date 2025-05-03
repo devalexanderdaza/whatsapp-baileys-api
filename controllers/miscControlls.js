@@ -1,14 +1,18 @@
+import puppeteer from 'puppeteer'
+import path from 'path'
+import { v4 as uuidv4 } from 'uuid'
 import {
-    updateProfileStatus,
-    updateProfileName,
-    getSession,
-    getProfilePicture,
-    formatPhone,
-    formatGroup,
-    profilePicture,
     blockAndUnblockUser,
+    formatGroup,
+    formatPhone,
+    getProfilePicture,
+    getSession,
+    profilePicture,
+    updateProfileName,
+    updateProfileStatus,
 } from './../whatsapp.js'
 import response from './../response.js'
+import { getOutputDir } from '../utils/utils.js'
 
 const setProfileStatus = async (req, res) => {
     try {
@@ -87,6 +91,34 @@ const blockAndUnblockContact = async (req, res) => {
     }
 }
 
+const getImageFromHTML = async (req, res) => {
+    const { html } = req.body
+    if (!html) return response(res, 400, false, 'HTML content is required')
+
+    const browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    })
+    const page = await browser.newPage()
+
+    try {
+        await page.setContent(html, { waitUntil: 'networkidle0' })
+        const filename = `${uuidv4()}.jpeg`
+        const filepath = path.join(getOutputDir(), filename)
+        await page.screenshot({ path: filepath, type: 'jpeg', fullPage: true })
+        await browser.close()
+
+        const fullBaseUrl = `${req.protocol}://${req.get('host')}`
+        const imageUrl = `${fullBaseUrl}/img/${filename}`
+
+        response(res, 200, true, 'Image generated successfully', { image_url: imageUrl })
+    } catch (err) {
+        await browser.close()
+        console.error('Error generating image:', err)
+        response(res, 500, false, 'Error generating image', { error: err.message })
+    }
+}
+
 export {
     setProfileStatus,
     setProfileName,
@@ -94,4 +126,5 @@ export {
     getProfile,
     getProfilePictureUser,
     blockAndUnblockContact,
+    getImageFromHTML,
 }
