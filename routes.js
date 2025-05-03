@@ -1,16 +1,18 @@
-import { Router } from 'express'
+import express, { Router } from 'express'
 import sessionsRoute from './routes/sessionsRoute.js'
 import chatsRoute from './routes/chatsRoute.js'
 import groupsRoute from './routes/groupsRoute.js'
 import miscRoute from './routes/miscRoute.js'
 import response from './response.js'
 import authenticationValidator from './middlewares/authenticationValidator.js'
+import { getOutputDir } from './utils/utils.js'
 
 const router = Router()
 
 // Use auth middleware for all routes
 router.use(authenticationValidator)
 
+router.use('/img', express.static(getOutputDir()))
 router.use('/sessions', sessionsRoute)
 router.use('/chats', chatsRoute)
 router.use('/groups', groupsRoute)

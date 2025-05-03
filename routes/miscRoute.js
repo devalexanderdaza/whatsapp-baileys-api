@@ -53,4 +53,6 @@ router.post(
     controller.blockAndUnblockContact,
 )
 
+router.post('/html2img', body('html').notEmpty(), controller.getImageFromHTML)
+
 export default router
