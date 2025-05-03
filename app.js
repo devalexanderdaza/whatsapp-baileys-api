@@ -4,7 +4,7 @@ import nodeCleanup from 'node-cleanup'
 import routes from './routes.js'
 import { cleanup, init } from './whatsapp.js'
 import cors from 'cors'
-import bodyParser from 'body-parser'
+// import bodyParser from 'body-parser'
 
 const app = express()
 
@@ -16,7 +16,7 @@ app.set('trust proxy', true)
 app.use(cors())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
-app.use(bodyParser.json({ limit: '10mb' }))
+// app.use(bodyParser.json({ limit: '10mb' }))
 
 app.use('/', routes)
 

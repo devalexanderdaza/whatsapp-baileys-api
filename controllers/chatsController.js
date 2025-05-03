@@ -24,7 +24,7 @@ const send = async (req, res) => {
 
     const typesMessage = ['image', 'video', 'audio', 'document', 'sticker']
 
-    const filterTypeMessaje = compareAndFilter(Object.keys(message), typesMessage)
+    const filterTypeMessage = compareAndFilter(Object.keys(message), typesMessage)
     try {
         const exists = await isExists(session, receiver, isGroup)
 
@@ -32,8 +32,8 @@ const send = async (req, res) => {
             return response(res, 400, false, 'The receiver number is not exists.')
         }
 
-        if (filterTypeMessaje.length > 0) {
-            const url = message[filterTypeMessaje]?.url
+        if (filterTypeMessage.length > 0) {
+            const url = message[filterTypeMessage]?.url
 
             if (url.length === undefined || url.length === 0) {
                 return response(res, 400, false, 'The URL is invalid or empty.')
@@ -57,18 +57,16 @@ const send = async (req, res) => {
 const sendBulk = async (req, res) => {
     const session = getSession(res.locals.sessionId)
     const errors = []
-    
-    let messagess = [];
-    
-    if (typeof req.body === 'object') {
-        messagess.push(req.body);
-    } else{
-        messagess = req.body;
-    }
-    
-    console.log(messagess);
 
-    for (const [key, data] of Object.entries(messagess)) {
+    let messagesArray = []
+
+    if (typeof req.body === 'object') {
+        messagesArray.push(req.body)
+    } else {
+        messagesArray = req.body
+    }
+
+    for (const [key, data] of Object.entries(messagesArray[0])) {
         let { receiver, message, delay } = data
 
         if (!receiver || !message) {
@@ -90,7 +88,9 @@ const sendBulk = async (req, res) => {
                 continue
             }
 
-            await sendMessage(session, receiver, message, delay)
+            sendMessage(session, receiver, message, delay).then(() => {
+                console.log(`Message sent to ${receiver}`)
+            })
         } catch (err) {
             errors.push({ key, message: err.message })
         }
